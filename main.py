@@ -557,155 +557,243 @@ elif page == "Fraud Detection":
 # PAGE 4: MODEL PERFORMANCE
 # ==========================================
 
+# ==========================================
+# PAGE 4: MODEL PERFORMANCE
+# ==========================================
+
 elif page == "Model Performance":
 
     st.title("Model Performance")
 
-    results_path = "outputs/improved_predictions.csv"
+    evaluation_data = None
+    actual = None
+    predicted = None
+    scores = None
 
-    if os.path.exists(results_path):
+    # First check results from uploaded dataset
+    if "analysis_results" in st.session_state:
 
-        results = pd.read_csv(results_path)
+        results = st.session_state["analysis_results"]
 
-        actual = results["Actual"]
-
-        predicted = results["Predicted"]
-
-        scores = results["Anomaly_Score"]
-
-        # Calculate evaluation metrics
-
-        precision = precision_score(
-            actual,
-            predicted,
-            zero_division=0
+        # Check whether actual fraud labels are available
+        class_column = next(
+            (col for col in results.columns
+             if col.lower() == "class"),
+            None
         )
 
-        recall = recall_score(
-            actual,
-            predicted,
-            zero_division=0
-        )
+        if class_column is not None:
 
-        f1 = f1_score(
-            actual,
-            predicted,
-            zero_division=0
-        )
+            actual = pd.to_numeric(
+                results[class_column],
+                errors="coerce"
+            )
 
-        auc = roc_auc_score(
-            actual,
-            scores
-        )
+            predicted = (
+                results["Prediction"] == "Suspicious"
+            ).astype(int)
 
-        # Display metrics
+            scores = pd.to_numeric(
+                results["Anomaly Score"],
+                errors="coerce"
+            )
 
-        st.subheader("Evaluation Metrics")
+            evaluation_data = "uploaded"
 
-        col1, col2, col3, col4 = st.columns(4)
+    # If uploaded results are unavailable, check saved results
+    if evaluation_data is None:
 
-        col1.metric(
-            "Precision",
-            f"{precision * 100:.2f}%"
-        )
+        results_path = "outputs/improved_predictions.csv"
 
-        col2.metric(
-            "Recall",
-            f"{recall * 100:.2f}%"
-        )
+        if os.path.exists(results_path):
 
-        col3.metric(
-            "F1 Score",
-            f"{f1 * 100:.2f}%"
-        )
+            results = pd.read_csv(results_path)
 
-        col4.metric(
-            "ROC-AUC",
-            f"{auc * 100:.2f}%"
-        )
+            actual = pd.to_numeric(
+                results["Actual"],
+                errors="coerce"
+            )
 
-        st.divider()
+            predicted = pd.to_numeric(
+                results["Predicted"],
+                errors="coerce"
+            )
 
-        # Confusion matrix
+            scores = pd.to_numeric(
+                results["Anomaly_Score"],
+                errors="coerce"
+            )
 
-        st.subheader("Confusion Matrix")
+            evaluation_data = "saved"
 
-        cm = confusion_matrix(
-            actual,
-            predicted,
-            labels=[0, 1]
-        )
+    if evaluation_data is not None:
 
-        cm_df = pd.DataFrame(
-            cm,
-            index=[
-                "Actual Normal",
-                "Actual Fraud"
-            ],
-            columns=[
-                "Predicted Normal",
-                "Predicted Fraud"
-            ]
-        )
+        # Remove invalid records
+        evaluation = pd.DataFrame({
+            "Actual": actual,
+            "Predicted": predicted,
+            "Score": scores
+        }).replace([np.inf, -np.inf], np.nan).dropna()
 
-        st.dataframe(
-            cm_df,
-            use_container_width=True
-        )
+        actual = evaluation["Actual"].astype(int)
+        predicted = evaluation["Predicted"].astype(int)
+        scores = evaluation["Score"]
 
-        cm_path = "outputs/improved_confusion_matrix.png"
+        if len(evaluation) == 0:
 
-        if os.path.exists(cm_path):
+            st.warning("No valid evaluation records found.")
 
-            st.image(
-                cm_path,
-                caption="Improved Isolation Forest - Confusion Matrix",
+        elif actual.nunique() < 2:
+
+            st.warning(
+                "Both normal and fraud transactions are required "
+                "to calculate model evaluation metrics."
+            )
+
+        else:
+
+            # Calculate metrics
+            precision = precision_score(
+                actual, predicted, zero_division=0
+            )
+
+            recall = recall_score(
+                actual, predicted, zero_division=0
+            )
+
+            f1 = f1_score(
+                actual, predicted, zero_division=0
+            )
+
+            auc = roc_auc_score(actual, scores)
+
+            if evaluation_data == "uploaded":
+                st.success(
+                    "Showing evaluation results for the uploaded dataset."
+                )
+            else:
+                st.info(
+                    "Showing evaluation results from the saved test dataset."
+                )
+
+            # Evaluation metrics
+            st.subheader("Evaluation Metrics")
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric("Precision", f"{precision * 100:.2f}%")
+            col2.metric("Recall", f"{recall * 100:.2f}%")
+            col3.metric("F1 Score", f"{f1 * 100:.2f}%")
+            col4.metric("ROC-AUC", f"{auc * 100:.2f}%")
+
+            st.divider()
+
+            # Confusion Matrix
+            st.subheader("Confusion Matrix")
+
+            cm = confusion_matrix(
+                actual,
+                predicted,
+                labels=[0, 1]
+            )
+
+            cm_df = pd.DataFrame(
+                cm,
+                index=["Actual Normal", "Actual Fraud"],
+                columns=["Predicted Normal", "Predicted Fraud"]
+            )
+
+            st.dataframe(
+                cm_df,
                 use_container_width=True
             )
 
-        st.divider()
+            fig, ax = plt.subplots(figsize=(7, 5))
 
-        # ROC curve
+            import seaborn as sns
 
-        st.subheader("ROC Curve")
-
-        roc_path = "outputs/improved_roc_curve.png"
-
-        if os.path.exists(roc_path):
-
-            st.image(
-                roc_path,
-                caption="Improved Isolation Forest - ROC Curve",
-                use_container_width=True
+            sns.heatmap(
+                cm,
+                annot=True,
+                fmt="d",
+                cmap="Blues",
+                xticklabels=["Normal", "Fraud"],
+                yticklabels=["Normal", "Fraud"],
+                ax=ax
             )
 
-        st.divider()
+            ax.set_title("Isolation Forest - Confusion Matrix")
+            ax.set_xlabel("Predicted Label")
+            ax.set_ylabel("Actual Label")
 
-        # Model information
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
 
-        st.subheader("Model Information")
+            st.divider()
 
-        st.write("Algorithm: Isolation Forest")
+            # ROC Curve
+            st.subheader("ROC Curve")
 
-        st.write(
-            "Number of Estimators:",
-            getattr(model, "n_estimators", "Not available")
-        )
+            from sklearn.metrics import roc_curve
 
-        st.write("Learning Method: Unsupervised")
+            fpr, tpr, thresholds = roc_curve(
+                actual,
+                scores
+            )
 
-        st.write("Training Data: Normal Transactions Only")
+            fig, ax = plt.subplots(figsize=(8, 5))
 
-        st.write(
-            "Selected Anomaly Threshold:",
-            round(float(threshold), 6)
-        )
+            ax.plot(
+                fpr,
+                tpr,
+                label=f"Isolation Forest (AUC = {auc:.2f})",
+                linewidth=2
+            )
+
+            ax.plot(
+                [0, 1],
+                [0, 1],
+                linestyle="--",
+                color="grey"
+            )
+
+            ax.set_xlabel("False Positive Rate")
+            ax.set_ylabel("True Positive Rate")
+            ax.set_title("Isolation Forest - ROC Curve")
+            ax.legend()
+            ax.grid(alpha=0.3)
+
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+            st.divider()
 
     else:
 
         st.warning(
-            "Model evaluation results are not available."
+            "Model evaluation results are not available. "
+            "Please upload a labelled test dataset and analyse it first."
         )
+
+    # Model Information
+    st.subheader("Model Information")
+
+    st.write("Algorithm: Isolation Forest")
+
+    st.write(
+        "Number of Estimators:",
+        getattr(model, "n_estimators", "Not available")
+    )
+
+    st.write("Learning Method: Unsupervised")
+    st.write("Training Data: Normal Transactions Only")
+
+    st.write(
+        "Selected Anomaly Threshold:",
+        round(float(threshold), 6)
+    )
 
 
 # ==========================================
