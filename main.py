@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -11,7 +10,8 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     roc_auc_score,
-    confusion_matrix
+    confusion_matrix,
+    roc_curve
 )
 
 
@@ -27,11 +27,13 @@ st.set_page_config(
 
 
 # ==========================================
-# CUSTOM DESIGN
+# CUSTOM DESIGN - LIGHT AND DARK MODE FIX
 # ==========================================
 
 st.markdown("""
 <style>
+
+/* Main background */
 
 .stApp {
     background: linear-gradient(
@@ -40,62 +42,287 @@ st.markdown("""
         #f4f7fc 50%,
         #e5eef8 100%
     );
+    color: #193858 !important;
 }
+
+/* Main content spacing */
 
 .block-container {
     padding-top: 2rem;
     padding-bottom: 2rem;
 }
 
+/* Fix text visibility in dark mode */
+
+.stApp h1,
+.stApp h2,
+.stApp h3,
+.stApp h4,
+.stApp h5,
+.stApp h6 {
+    color: #193858 !important;
+}
+
+.stApp p,
+.stApp li,
+.stApp label,
+.stApp .stMarkdown,
+.stApp [data-testid="stMarkdownContainer"],
+.stApp [data-testid="stMarkdownContainer"] p,
+.stApp [data-testid="stMarkdownContainer"] span {
+    color: #193858 !important;
+}
+
+/* Sidebar */
+
 [data-testid="stSidebar"] {
-    background-color: #dce8f5;
+    background-color: #dce8f5 !important;
     border-right: 1px solid #c8d8e9;
 }
 
-h1, h2, h3 {
-    color: #193858;
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+    color: #193858 !important;
 }
 
+/* Sidebar radio buttons */
+
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    color: #193858 !important;
+}
+
+/* Metric cards */
+
 [data-testid="stMetric"] {
-    background-color: white;
+    background-color: #ffffff !important;
     padding: 18px;
     border-radius: 10px;
     border: 1px solid #d5e1ef;
 }
 
+[data-testid="stMetric"] label,
+[data-testid="stMetric"] [data-testid="stMetricLabel"],
+[data-testid="stMetric"] [data-testid="stMetricValue"],
+[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+    color: #193858 !important;
+}
+
+/* Data tables */
+
 [data-testid="stDataFrame"] {
-    background-color: white;
+    background-color: #ffffff !important;
     border-radius: 8px;
 }
 
+/* Buttons */
+
 div.stButton > button {
-    background-color: #315f91;
-    color: white;
+    background-color: #315f91 !important;
+    color: #ffffff !important;
     border: none;
     border-radius: 7px;
     padding: 8px 18px;
 }
 
 div.stButton > button:hover {
-    background-color: #24496f;
-    color: white;
+    background-color: #24496f !important;
+    color: #ffffff !important;
 }
 
+/* Download button */
+
 div.stDownloadButton > button {
-    background-color: #315f91;
-    color: white;
+    background-color: #315f91 !important;
+    color: #ffffff !important;
     border-radius: 7px;
 }
 
+div.stDownloadButton > button:hover {
+    background-color: #24496f !important;
+    color: #ffffff !important;
+}
+
+/* File uploader */
+
 [data-testid="stFileUploader"] {
-    background-color: rgba(255,255,255,0.75);
+    background-color: rgba(255,255,255,0.85) !important;
     padding: 15px;
     border-radius: 10px;
     border: 1px solid #d5e1ef;
 }
 
+[data-testid="stFileUploader"] label,
+[data-testid="stFileUploader"] span,
+[data-testid="stFileUploader"] small {
+    color: #193858 !important;
+}
+
+/* Input fields */
+
+.stTextInput label,
+.stSelectbox label,
+.stFileUploader label,
+.stNumberInput label {
+    color: #193858 !important;
+}
+
+/* Input text */
+
+.stTextInput input,
+.stNumberInput input {
+    color: #193858 !important;
+    background-color: #ffffff !important;
+}
+
+/* Select box */
+
+.stSelectbox div[data-baseweb="select"] {
+    background-color: #ffffff !important;
+}
+
+.stSelectbox div[data-baseweb="select"] * {
+    color: #193858 !important;
+}
+
+/* Information boxes */
+
+[data-testid="stAlert"] p {
+    color: #193858 !important;
+}
+
+/* Horizontal divider */
+
 hr {
-    border-color: #d2dfed;
+    border-color: #d2dfed !important;
+}
+
+/* Captions */
+
+.stCaption,
+[data-testid="stCaptionContainer"] {
+    color: #526b84 !important;
+}
+
+/* Keep button text white */
+
+.stButton button,
+.stDownloadButton button {
+    color: #ffffff !important;
+}
+
+/* Charts and plot containers */
+
+[data-testid="stImage"],
+[data-testid="stPlotlyChart"],
+[data-testid="stPyplot"] {
+    border-radius: 10px;
+}
+
+/* FORCE THE SAME LIGHT APPEARANCE IN DARK-MODE BROWSERS */
+
+:root {
+    color-scheme: light !important;
+}
+
+html, body,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stMainBlockContainer"] {
+    background-color: #eef4fc !important;
+    color: #193858 !important;
+}
+
+/* Keep the header consistent */
+
+[data-testid="stHeader"] {
+    background-color: #eef4fc !important;
+}
+
+/* Alert / information / success / warning boxes */
+
+[data-testid="stAlert"] {
+    background-color: #e8f1fc !important;
+    border: 1px solid #cbdced !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] span,
+[data-testid="stAlert"] div {
+    color: #193858 !important;
+}
+
+/* File uploader and drop zone */
+
+[data-testid="stFileUploader"] {
+    background-color: #ffffff !important;
+    border: 1px solid #d5e1ef !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stFileUploader"] section {
+    background-color: #f4f7fc !important;
+    border: 1px dashed #9bb5d0 !important;
+}
+
+[data-testid="stFileUploader"] button {
+    background-color: #315f91 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+[data-testid="stFileUploader"] button * {
+    color: #ffffff !important;
+}
+
+[data-testid="stFileUploader"] span,
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploader"] label {
+    color: #193858 !important;
+}
+
+/* Text and number input fields */
+
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stTextArea"] textarea {
+    background-color: #ffffff !important;
+    color: #193858 !important;
+    border-color: #cbdced !important;
+}
+
+/* Select boxes */
+
+[data-baseweb="select"] > div {
+    background-color: #ffffff !important;
+    color: #193858 !important;
+    border-color: #cbdced !important;
+}
+
+[data-baseweb="select"] * {
+    color: #193858 !important;
+}
+
+/* Dataframe surface */
+
+[data-testid="stDataFrame"] {
+    background-color: #ffffff !important;
+}
+
+/* Ensure sidebar and its controls remain light */
+
+[data-testid="stSidebar"] {
+    background-color: #dce8f5 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] * {
+    color: #193858 !important;
 }
 
 </style>
@@ -119,7 +346,10 @@ def load_model():
 
 if not os.path.exists(MODEL_PATH):
 
-    st.error("Trained model not found. Please train the model first.")
+    st.error(
+        "Trained model not found. Please train the model first."
+    )
+
     st.stop()
 
 
@@ -134,6 +364,7 @@ try:
 except Exception as e:
 
     st.error(f"Error loading model: {e}")
+
     st.stop()
 
 
@@ -179,12 +410,15 @@ st.sidebar.caption(
 def detect_fraud(data):
 
     # Select required model features
+
     X = data[features].copy()
 
     # Convert values into numerical format
+
     X = X.apply(pd.to_numeric, errors="coerce")
 
     # Check for missing values
+
     if X.isnull().any().any():
 
         raise ValueError(
@@ -192,6 +426,7 @@ def detect_fraud(data):
         )
 
     # Check for infinite values
+
     if not np.isfinite(X.to_numpy()).all():
 
         raise ValueError(
@@ -199,12 +434,15 @@ def detect_fraud(data):
         )
 
     # Calculate anomaly scores
+
     scores = -model.decision_function(X)
 
     # Apply selected threshold
+
     predictions = (scores >= threshold).astype(int)
 
     # Create result dataframe
+
     results = data.copy()
 
     results["Anomaly Score"] = scores
@@ -235,13 +473,26 @@ if page == "Dashboard":
 
     results_path = "outputs/improved_predictions.csv"
 
-    if os.path.exists(results_path):
+    if (
+        "analysis_results" in st.session_state
+        or os.path.exists(results_path)
+    ):
 
-        results = pd.read_csv(results_path)
+        if "analysis_results" in st.session_state:
+
+            results = st.session_state["analysis_results"]
+
+            fraud = int(
+                (results["Prediction"] == "Suspicious").sum()
+            )
+
+        else:
+
+            results = pd.read_csv(results_path)
+
+            fraud = int(results["Predicted"].sum())
 
         total = len(results)
-
-        fraud = int(results["Predicted"].sum())
 
         normal = total - fraud
 
@@ -268,13 +519,14 @@ if page == "Dashboard":
 
         st.divider()
 
-        # Improved transaction distribution chart
+        # Transaction distribution chart
 
         st.subheader("Transaction Distribution")
 
         fig, ax = plt.subplots(figsize=(9, 4))
 
         categories = ["Normal", "Suspicious"]
+
         values = [normal, fraud]
 
         bars = ax.bar(
@@ -292,21 +544,21 @@ if page == "Dashboard":
 
         ax.set_ylabel("Number of Transactions")
 
-        # Logarithmic scale helps display both categories
         ax.set_yscale("log")
 
-        ax.set_ylim(1, max(values) * 2)
+        ax.set_ylim(1, max(values) * 2 if max(values) > 0 else 10)
 
-        # Display transaction counts above bars
         for bar, value in zip(bars, values):
 
-            ax.text(
-                bar.get_x() + bar.get_width() / 2,
-                value * 1.12,
-                f"{value:,}",
-                ha="center",
-                fontsize=10
-            )
+            if value > 0:
+
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    value * 1.12,
+                    f"{value:,}",
+                    ha="center",
+                    fontsize=10
+                )
 
         ax.grid(
             axis="y",
@@ -318,7 +570,7 @@ if page == "Dashboard":
 
         fig.tight_layout()
 
-        st.pyplot(fig)
+        st.pyplot(fig, use_container_width=True)
 
         plt.close(fig)
 
@@ -330,7 +582,8 @@ if page == "Dashboard":
     else:
 
         st.warning(
-            "Model prediction results are not available."
+            "Model prediction results are not available. "
+            "Please upload a dataset to begin."
         )
 
     st.divider()
@@ -466,7 +719,7 @@ elif page == "Fraud Detection":
 
         normal_count = len(results) - fraud_count
 
-        # Summary
+        # Analysis summary
 
         st.subheader("Analysis Summary")
 
@@ -489,7 +742,7 @@ elif page == "Fraud Detection":
 
         st.divider()
 
-        # Transaction filtering
+        # Transaction details
 
         st.subheader("Transaction Details")
 
@@ -557,35 +810,32 @@ elif page == "Fraud Detection":
 # PAGE 4: MODEL PERFORMANCE
 # ==========================================
 
-# ==========================================
-# PAGE 4: MODEL PERFORMANCE
-# ==========================================
-
 elif page == "Model Performance":
 
     st.title("Model Performance")
 
-    evaluation_data = None
-    actual = None
-    predicted = None
-    scores = None
+    results_path = "outputs/improved_predictions.csv"
 
-    # First check results from uploaded dataset
+    use_uploaded_results = False
+
+    # First check the latest uploaded dataset
+
     if "analysis_results" in st.session_state:
 
-        results = st.session_state["analysis_results"]
+        uploaded_results = st.session_state["analysis_results"]
 
-        # Check whether actual fraud labels are available
-        class_column = next(
-            (col for col in results.columns
-             if col.lower() == "class"),
-            None
+        actual_column = (
+            "Class" if "Class" in uploaded_results.columns
+            else "Actual" if "Actual" in uploaded_results.columns
+            else None
         )
 
-        if class_column is not None:
+        if actual_column is not None:
+
+            results = uploaded_results.copy()
 
             actual = pd.to_numeric(
-                results[class_column],
+                results[actual_column],
                 errors="coerce"
             )
 
@@ -598,202 +848,318 @@ elif page == "Model Performance":
                 errors="coerce"
             )
 
-            evaluation_data = "uploaded"
+            use_uploaded_results = True
 
-    # If uploaded results are unavailable, check saved results
-    if evaluation_data is None:
+    # Otherwise use saved prediction results
 
-        results_path = "outputs/improved_predictions.csv"
+    if not use_uploaded_results and os.path.exists(results_path):
 
-        if os.path.exists(results_path):
+        results = pd.read_csv(results_path)
 
-            results = pd.read_csv(results_path)
+        actual = pd.to_numeric(
+            results["Actual"],
+            errors="coerce"
+        )
 
-            actual = pd.to_numeric(
-                results["Actual"],
-                errors="coerce"
-            )
+        predicted = pd.to_numeric(
+            results["Predicted"],
+            errors="coerce"
+        )
 
-            predicted = pd.to_numeric(
-                results["Predicted"],
-                errors="coerce"
-            )
+        scores = pd.to_numeric(
+            results["Anomaly_Score"],
+            errors="coerce"
+        )
 
-            scores = pd.to_numeric(
-                results["Anomaly_Score"],
-                errors="coerce"
-            )
+    if use_uploaded_results or os.path.exists(results_path):
 
-            evaluation_data = "saved"
+        if use_uploaded_results:
 
-    if evaluation_data is not None:
-
-        # Remove invalid records
-        evaluation = pd.DataFrame({
-            "Actual": actual,
-            "Predicted": predicted,
-            "Score": scores
-        }).replace([np.inf, -np.inf], np.nan).dropna()
-
-        actual = evaluation["Actual"].astype(int)
-        predicted = evaluation["Predicted"].astype(int)
-        scores = evaluation["Score"]
-
-        if len(evaluation) == 0:
-
-            st.warning("No valid evaluation records found.")
-
-        elif actual.nunique() < 2:
-
-            st.warning(
-                "Both normal and fraud transactions are required "
-                "to calculate model evaluation metrics."
+            st.success(
+                "Showing evaluation results for the uploaded dataset."
             )
 
         else:
 
-            # Calculate metrics
-            precision = precision_score(
-                actual, predicted, zero_division=0
+            st.caption(
+                "Evaluation source: saved prediction results."
             )
 
-            recall = recall_score(
-                actual, predicted, zero_division=0
+        # Prepare evaluation data
+
+        evaluation = pd.DataFrame({
+            "Actual": actual,
+            "Predicted": predicted,
+            "Anomaly_Score": scores
+        }).dropna()
+
+        actual = evaluation["Actual"].astype(int)
+
+        predicted = evaluation["Predicted"].astype(int)
+
+        scores = evaluation["Anomaly_Score"].astype(float)
+
+        if len(evaluation) == 0:
+
+            st.warning("No valid evaluation records are available.")
+
+            st.stop()
+
+        if not set(actual.unique()).issubset({0, 1}):
+
+            st.error(
+                "The actual class column must contain only 0 and 1."
             )
 
-            f1 = f1_score(
-                actual, predicted, zero_division=0
-            )
+            st.stop()
 
-            auc = roc_auc_score(actual, scores)
+        # Calculate evaluation metrics
 
-            if evaluation_data == "uploaded":
-                st.success(
-                    "Showing evaluation results for the uploaded dataset."
-                )
-            else:
-                st.info(
-                    "Showing evaluation results from the saved test dataset."
-                )
+        precision = precision_score(
+            actual,
+            predicted,
+            zero_division=0
+        )
 
-            # Evaluation metrics
-            st.subheader("Evaluation Metrics")
+        recall = recall_score(
+            actual,
+            predicted,
+            zero_division=0
+        )
 
-            col1, col2, col3, col4 = st.columns(4)
+        f1 = f1_score(
+            actual,
+            predicted,
+            zero_division=0
+        )
 
-            col1.metric("Precision", f"{precision * 100:.2f}%")
-            col2.metric("Recall", f"{recall * 100:.2f}%")
-            col3.metric("F1 Score", f"{f1 * 100:.2f}%")
-            col4.metric("ROC-AUC", f"{auc * 100:.2f}%")
+        # ROC-AUC
 
-            st.divider()
+        auc = None
 
-            # Confusion Matrix
-            st.subheader("Confusion Matrix")
+        if actual.nunique() == 2:
 
-            cm = confusion_matrix(
-                actual,
-                predicted,
-                labels=[0, 1]
-            )
-
-            cm_df = pd.DataFrame(
-                cm,
-                index=["Actual Normal", "Actual Fraud"],
-                columns=["Predicted Normal", "Predicted Fraud"]
-            )
-
-            st.dataframe(
-                cm_df,
-                use_container_width=True
-            )
-
-            fig, ax = plt.subplots(figsize=(7, 5))
-
-            import seaborn as sns
-
-            sns.heatmap(
-                cm,
-                annot=True,
-                fmt="d",
-                cmap="Blues",
-                xticklabels=["Normal", "Fraud"],
-                yticklabels=["Normal", "Fraud"],
-                ax=ax
-            )
-
-            ax.set_title("Isolation Forest - Confusion Matrix")
-            ax.set_xlabel("Predicted Label")
-            ax.set_ylabel("Actual Label")
-
-            fig.tight_layout()
-            st.pyplot(fig)
-            plt.close(fig)
-
-            st.divider()
-
-            # ROC Curve
-            st.subheader("ROC Curve")
-
-            from sklearn.metrics import roc_curve
-
-            fpr, tpr, thresholds = roc_curve(
+            auc = roc_auc_score(
                 actual,
                 scores
             )
 
-            fig, ax = plt.subplots(figsize=(8, 5))
+        # Evaluation metrics
 
-            ax.plot(
-                fpr,
-                tpr,
-                label=f"Isolation Forest (AUC = {auc:.2f})",
-                linewidth=2
+        st.subheader("Evaluation Metrics")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric(
+            "Precision",
+            f"{precision * 100:.2f}%"
+        )
+
+        col2.metric(
+            "Recall",
+            f"{recall * 100:.2f}%"
+        )
+
+        col3.metric(
+            "F1 Score",
+            f"{f1 * 100:.2f}%"
+        )
+
+        col4.metric(
+            "ROC-AUC",
+            f"{auc * 100:.2f}%" if auc is not None else "N/A"
+        )
+
+        st.divider()
+
+        # Confusion matrix
+
+        st.subheader("Confusion Matrix")
+
+        cm = confusion_matrix(
+            actual,
+            predicted,
+            labels=[0, 1]
+        )
+
+        cm_df = pd.DataFrame(
+            cm,
+            index=[
+                "Actual Normal",
+                "Actual Fraud"
+            ],
+            columns=[
+                "Predicted Normal",
+                "Predicted Fraud"
+            ]
+        )
+
+        st.dataframe(
+            cm_df,
+            use_container_width=True
+        )
+
+        # Draw confusion matrix from current evaluation
+
+        fig_cm, ax_cm = plt.subplots(figsize=(7, 4.5))
+
+        image = ax_cm.imshow(
+            cm,
+            cmap="Blues"
+        )
+
+        ax_cm.set_title(
+            "Isolation Forest - Confusion Matrix"
+        )
+
+        ax_cm.set_xlabel("Predicted label")
+
+        ax_cm.set_ylabel("Actual label")
+
+        ax_cm.set_xticks(
+            [0, 1],
+            labels=["Normal", "Fraud"]
+        )
+
+        ax_cm.set_yticks(
+            [0, 1],
+            labels=["Normal", "Fraud"]
+        )
+
+        midpoint = cm.max() / 2 if cm.size else 0
+
+        for row in range(cm.shape[0]):
+
+            for col in range(cm.shape[1]):
+
+                ax_cm.text(
+                    col,
+                    row,
+                    f"{cm[row, col]:,}",
+                    ha="center",
+                    va="center",
+                    color=(
+                        "white"
+                        if cm[row, col] > midpoint
+                        else "#17324d"
+                    ),
+                    fontsize=11
+                )
+
+        fig_cm.colorbar(
+            image,
+            ax=ax_cm,
+            fraction=0.046,
+            pad=0.04
+        )
+
+        fig_cm.tight_layout()
+
+        st.pyplot(
+            fig_cm,
+            use_container_width=True
+        )
+
+        plt.close(fig_cm)
+
+        st.divider()
+
+        # ROC curve
+
+        st.subheader("ROC Curve")
+
+        if actual.nunique() == 2:
+
+            fpr, tpr, _ = roc_curve(
+                actual,
+                scores
             )
 
-            ax.plot(
+            fig_roc, ax_roc = plt.subplots(
+                figsize=(7, 4.5)
+            )
+
+            ax_roc.plot(
+                fpr,
+                tpr,
+                linewidth=2,
+                label=f"Improved Isolation Forest (AUC = {auc:.2f})"
+            )
+
+            ax_roc.plot(
                 [0, 1],
                 [0, 1],
                 linestyle="--",
-                color="grey"
+                color="grey",
+                alpha=0.7
             )
 
-            ax.set_xlabel("False Positive Rate")
-            ax.set_ylabel("True Positive Rate")
-            ax.set_title("Isolation Forest - ROC Curve")
-            ax.legend()
-            ax.grid(alpha=0.3)
+            ax_roc.set_title(
+                "Improved Isolation Forest - ROC Curve"
+            )
 
-            fig.tight_layout()
-            st.pyplot(fig)
-            plt.close(fig)
+            ax_roc.set_xlabel("False Positive Rate")
 
-            st.divider()
+            ax_roc.set_ylabel("True Positive Rate")
+
+            ax_roc.set_xlim(0, 1)
+
+            ax_roc.set_ylim(0, 1.02)
+
+            ax_roc.legend(loc="lower right")
+
+            ax_roc.grid(alpha=0.2)
+
+            fig_roc.tight_layout()
+
+            st.pyplot(
+                fig_roc,
+                use_container_width=True
+            )
+
+            plt.close(fig_roc)
+
+        else:
+
+            st.warning(
+                "ROC curve cannot be calculated because the "
+                "evaluation data does not contain both normal "
+                "and fraud transactions."
+            )
+
+        st.divider()
+
+        # Model information
+
+        st.subheader("Model Information")
+
+        st.write("Algorithm: Isolation Forest")
+
+        st.write(
+            "Number of Estimators:",
+            getattr(
+                model,
+                "n_estimators",
+                "Not available"
+            )
+        )
+
+        st.write("Learning Method: Unsupervised")
+
+        st.write("Training Data: Normal Transactions Only")
+
+        st.write(
+            "Selected Anomaly Threshold:",
+            round(float(threshold), 6)
+        )
 
     else:
 
         st.warning(
             "Model evaluation results are not available. "
-            "Please upload a labelled test dataset and analyse it first."
+            "Upload a labelled test dataset or check "
+            "outputs/improved_predictions.csv."
         )
-
-    # Model Information
-    st.subheader("Model Information")
-
-    st.write("Algorithm: Isolation Forest")
-
-    st.write(
-        "Number of Estimators:",
-        getattr(model, "n_estimators", "Not available")
-    )
-
-    st.write("Learning Method: Unsupervised")
-    st.write("Training Data: Normal Transactions Only")
-
-    st.write(
-        "Selected Anomaly Threshold:",
-        round(float(threshold), 6)
-    )
 
 
 # ==========================================
